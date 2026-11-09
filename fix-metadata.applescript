@@ -145,10 +145,21 @@ on run
 			try
 				set targetAlias to (POSIX file pStr) as alias
 				set matchedTracks to (every file track of library playlist 1 whose location is targetAlias)
-				if (count of matchedTracks) is 0 then
+				-- whose location is は同じフォルダの別ファイルのトラックまで返すことがあるため、
+				-- 候補の location を POSIX パスで照合して本当に一致するものだけを採用する
+				set t to missing value
+				repeat with candidate in matchedTracks
+					set candLoc to location of candidate
+					if candLoc is not missing value then
+						if (POSIX path of (candLoc as alias)) is pStr then
+							set t to contents of candidate
+							exit repeat
+						end if
+					end if
+				end repeat
+				if t is missing value then
 					set notFoundCount to notFoundCount + 1
 				else
-					set t to item 1 of matchedTracks
 
 					if flagStr contains "T" then
 						set tName to name of t
